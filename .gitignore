@@ -69,3 +69,4 @@ test_retriever_db/
 *.csv
 specs/
 AI_ML Engineer Assignment – RAG-based Medical FAQ Chatbot.pdf
+kaggle.json

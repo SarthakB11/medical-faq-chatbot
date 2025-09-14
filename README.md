@@ -47,7 +47,7 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answe
     ```
 
 4.  **Prepare the dataset:**
-    Place your medical FAQ dataset in the `data` directory. A sample file named `dummy_medical_data.csv` is provided.
+    Place your medical FAQ dataset in the `data` directory. A sample file named `medical_faqs.csv` is provided.
 
 5.  **Build the vector store:**
     Run the following script to process the dataset and create the vector database:
@@ -85,7 +85,7 @@ venv/bin/python3 cli.py "qué es la fiebre" --lang Spanish
 ├── requirements.txt        # Project dependencies
 ├── .env.example            # Example environment file
 ├── data/                   # Directory for datasets
-│   └── dummy_medical_data.csv
+│   └── medical_faqs.csv
 ├── src/                    # Source code
 │   ├── data_loader.py
 │   ├── build_vector_store.py
@@ -97,7 +97,3 @@ venv/bin/python3 cli.py "qué es la fiebre" --lang Spanish
     ├── test_retriever.py
     └── test_answer_generator.py
 ```
-
-## Known Issues
-
-- The unit tests for `src/build_vector_store.py` are currently skipped due to a persistent issue with ChromaDB's state management in the testing environment, causing unreliable test results. The script itself functions correctly when run directly.

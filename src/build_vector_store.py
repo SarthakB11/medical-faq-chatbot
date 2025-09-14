@@ -69,7 +69,7 @@ def create_vector_store(
 if __name__ == '__main__':
     from data_loader import load_data
     
-    DATA_PATH = 'data/dummy_medical_data.csv'
+    DATA_PATH = 'data/medical_faqs.csv'
     DB_PATH = 'chroma_db'
     COLLECTION_NAME = 'medical_faqs'
 

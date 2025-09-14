@@ -40,7 +40,7 @@ def main():
 
     # --- RAG Pipeline ---
     logging.info("1. Retrieving context from the knowledge base...")
-    retrieved_docs = retrieve_context(query, DB_PATH, COLLECTION_NAME)
+    retrieved_docs = retrieve_context(query, collection_name=COLLECTION_NAME, db_path=DB_PATH)
 
     if not retrieved_docs:
         print("\nI could not find any relevant information in the knowledge base to answer your question.")

@@ -46,7 +46,7 @@ if prompt := st.chat_input("What is your medical question?"):
     with st.spinner("Thinking..."):
         # 1. Retrieve context
         st.write("Retrieving relevant context from the knowledge base...")
-        retrieved_docs = retrieve_context(prompt, DB_PATH, COLLECTION_NAME)
+        retrieved_docs = retrieve_context(prompt, collection_name=COLLECTION_NAME, db_path=DB_PATH)
 
         if not retrieved_docs:
             response = "I could not find any relevant information in the knowledge base to answer your question."
