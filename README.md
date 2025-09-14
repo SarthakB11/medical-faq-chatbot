@@ -14,7 +14,7 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answe
 1.  **Data Preprocessing**: Medical FAQs are loaded from a CSV file, chunked into smaller pieces, and converted into vector embeddings using a multilingual Sentence Transformer model.
 2.  **Vector Store**: The embeddings are stored in a ChromaDB vector database for efficient similarity search.
 3.  **Retrieval**: When a user asks a question, the query is embedded, and the most relevant text chunks are retrieved from the vector store.
-4.  **Generation**: The user's query and the retrieved context are passed to the Gemini 1.5 Flash language model to generate a final answer.
+4.  **Generation**: The user's query and the retrieved context are passed to the Gemini 2.0 Flash language model to generate a final answer.
 
 ## Prerequisites
 

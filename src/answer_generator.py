@@ -52,7 +52,7 @@ Question: {query}
 
     try:
         logging.info("Calling Gemini API...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(prompt)
         
         answer = response.text.strip()
