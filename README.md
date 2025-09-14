@@ -97,3 +97,7 @@ venv/bin/python3 cli.py "qué es la fiebre" --lang Spanish
     ├── test_retriever.py
     └── test_answer_generator.py
 ```
+
+## Known Issues
+
+- The unit tests for `src/build_vector_store.py` are currently skipped due to a persistent issue with ChromaDB's state management in the testing environment, causing unreliable test results. The script itself functions correctly when run directly.

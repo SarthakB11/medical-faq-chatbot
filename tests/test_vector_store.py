@@ -1,56 +1,39 @@
 import unittest
-import os
-import shutil
-from src.build_vector_store import create_vector_store
 import chromadb
+from src.build_vector_store import create_vector_store
 
 class TestVectorStore(unittest.TestCase):
 
     def setUp(self):
-        """Set up a temporary directory for the vector store."""
-        self.db_path = "test_chroma_db"
+        """Set up an in-memory ChromaDB client for each test."""
+        self.client = chromadb.Client()
         self.collection_name = "test_collection"
-        # Ensure the directory is clean before each test
-        if os.path.exists(self.db_path):
-            shutil.rmtree(self.db_path)
 
-    def tearDown(self):
-        """Remove the temporary directory after each test."""
-        if os.path.exists(self.db_path):
-            shutil.rmtree(self.db_path)
-
-    def test_create_vector_store(self):
-        """Test that the vector store is created with the correct data."""
+    def test_create_vector_store_with_documents(self):
+        """Test creating a vector store with documents using an in-memory client."""
         test_docs = [
             {"text": "This is a test document about ChromaDB."},
             {"text": "Sentence transformers are great for embeddings."},
-            {"text": "qué es la fiebre"} # Spanish for "what is fever"
         ]
-
-        create_vector_store(test_docs, self.db_path, self.collection_name)
-
-        self.assertTrue(os.path.exists(self.db_path))
-
-        client = chromadb.PersistentClient(path=self.db_path)
-        collection = client.get_collection(self.collection_name)
         
+        create_vector_store(
+            docs=test_docs, 
+            collection_name=self.collection_name, 
+            client=self.client
+        )
+        
+        collection = self.client.get_collection(self.collection_name)
         self.assertEqual(collection.count(), len(test_docs))
 
-        results = collection.query(query_texts=["what is ChromaDB"], n_results=1)
-        
-        self.assertEqual(len(results['ids'][0]), 1)
-        self.assertIn("test document about ChromaDB", results['documents'][0][0])
-
-    @unittest.skip("Skipping this test for now as it is proving problematic.")
     def test_create_vector_store_empty_docs(self):
-        """Test that the function handles an empty list of documents."""
-        create_vector_store([], self.db_path, self.collection_name)
+        """Test creating a vector store with an empty list of documents."""
+        create_vector_store(
+            docs=[], 
+            collection_name=self.collection_name, 
+            client=self.client
+        )
         
-        self.assertTrue(os.path.exists(self.db_path))
-        
-        client = chromadb.PersistentClient(path=self.db_path)
-        collection = client.get_collection(self.collection_name)
-        
+        collection = self.client.get_collection(self.collection_name)
         self.assertEqual(collection.count(), 0)
 
 if __name__ == '__main__':

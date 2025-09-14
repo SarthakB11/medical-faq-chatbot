@@ -1,88 +1,80 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict
+from typing import List, Dict, Optional
 import logging
 from tqdm import tqdm
+import os
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-import os
-
-def create_vector_store(docs: List[Dict[str, str]], db_path: str, collection_name: str, model_name: str = 'paraphrase-multilingual-MiniLM-L12-v2'):
+def create_vector_store(
+    docs: List[Dict[str, str]], 
+    collection_name: str, 
+    db_path: Optional[str] = None, 
+    client: Optional[chromadb.Client] = None,
+    model_name: str = 'paraphrase-multilingual-MiniLM-L12-v2'
+):
     """
-    Creates a ChromaDB vector store from a list of documents.
+    Creates or updates a ChromaDB vector store from a list of documents.
 
     Args:
-        docs: A list of documents, where each document is a dictionary
-              expected to have a 'text' key.
-        db_path: The path to the directory where the database will be stored.
-        collection_name: The name of the collection to create in the database.
-        model_name: The name of the Sentence Transformers model to use for embeddings.
+        docs: A list of documents to add to the collection.
+        collection_name: The name of the collection.
+        db_path: Path for the persistent database. If None, an in-memory client must be provided.
+        client: An optional chromadb.Client instance. If not provided, a persistent client
+                will be created using db_path.
+        model_name: The Sentence Transformers model to use for embeddings.
     """
-    # Ensure the database directory exists
-    os.makedirs(db_path, exist_ok=True)
-    
-    logging.info(f"Initializing ChromaDB client at path: {db_path}")
-    client = chromadb.PersistentClient(path=db_path)
+    if client is None:
+        if db_path:
+            os.makedirs(db_path, exist_ok=True)
+            logging.info(f"Initializing ChromaDB persistent client at path: {db_path}")
+            client = chromadb.PersistentClient(path=db_path)
+        else:
+            raise ValueError("Either a 'db_path' for a persistent client or a 'client' instance must be provided.")
+    else:
+        logging.info("Using provided ChromaDB client.")
 
-    # Delete the collection if it already exists to ensure a fresh start
     try:
-        if collection_name in [c.name for c in client.list_collections()]:
-            logging.info(f"Collection '{collection_name}' already exists. Deleting it.")
-            client.delete_collection(name=collection_name)
+        collection = client.get_or_create_collection(name=collection_name)
+        logging.info(f"Using collection: '{collection_name}'")
     except Exception as e:
-        logging.warning(f"Could not check for or delete existing collection. This might be an issue on a fresh run. Error: {e}")
-
-
-    logging.info(f"Getting or creating collection: {collection_name}")
-    collection = client.get_or_create_collection(name=collection_name)
+        logging.error(f"Failed to get or create collection '{collection_name}': {e}")
+        return
 
     if not docs:
-        logging.warning("Document list is empty. The collection is created but contains no data.")
+        logging.warning("Document list is empty. No new data will be added.")
         return
 
     logging.info(f"Loading sentence transformer model: {model_name}")
     model = SentenceTransformer(model_name)
 
-    # Process documents in batches for efficiency
     batch_size = 100
     logging.info(f"Processing {len(docs)} documents in batches of {batch_size}...")
 
     for i in tqdm(range(0, len(docs), batch_size), desc="Embedding documents"):
         batch_docs = docs[i:i+batch_size]
-        
-        # Filter out any potential None or empty documents
-        texts_to_embed = [doc['text'] for doc in batch_docs if doc and 'text' in doc and doc['text']]
+        texts_to_embed = [doc['text'] for doc in batch_docs if doc and doc.get('text')]
         if not texts_to_embed:
             continue
 
-        # Generate embeddings
         embeddings = model.encode(texts_to_embed, show_progress_bar=False).tolist()
+        ids = [f"doc_{collection.count() + j}" for j in range(len(texts_to_embed))]
         
-        # Create unique IDs for each document
-        ids = [f"doc_{i+j}" for j in range(len(texts_to_embed))]
-        
-        # Add to the collection
-        collection.add(
-            embeddings=embeddings,
-            documents=texts_to_embed,
-            ids=ids
-        )
+        collection.add(embeddings=embeddings, documents=texts_to_embed, ids=ids)
 
-    logging.info(f"Vector store creation complete. Collection '{collection_name}' contains {collection.count()} documents.")
+    logging.info(f"Vector store update complete. Collection '{collection_name}' now contains {collection.count()} documents.")
 
 if __name__ == '__main__':
     from data_loader import load_data
     
-    # Configuration
     DATA_PATH = 'data/dummy_medical_data.csv'
     DB_PATH = 'chroma_db'
     COLLECTION_NAME = 'medical_faqs'
 
-    # Load data
     logging.info(f"Loading data from {DATA_PATH}...")
     documents = load_data(DATA_PATH)
     
-    # Create the vector store
-    create_vector_store(documents, DB_PATH, COLLECTION_NAME)
+    # The main script will still use the persistent client
+    create_vector_store(documents, collection_name=COLLECTION_NAME, db_path=DB_PATH)
