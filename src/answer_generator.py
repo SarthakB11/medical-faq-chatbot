@@ -12,10 +12,32 @@ load_dotenv(dotenv_path=dotenv_path)
 # --- Initialize Language Model ---
 llm = get_language_model()
 
-def _construct_prompt(query: str, context: List[Dict[str, any]], history: List[Dict[str, str]], language: str) -> str:
-    """Helper function to construct the full prompt."""
+def rewrite_query(query: str, history: List[Dict[str, str]]) -> str:
+    """
+    Rewrites a follow-up query into a standalone question using the conversation history.
+    """
+    if not history:
+        return query
+
     history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
     
+    prompt = f"""Based on the conversation history below, rewrite the user's final question to be a standalone question. If the final question is already standalone, just return it as is.
+
+Conversation History:
+---
+{history_str}
+---
+
+User's Final Question: {query}
+
+Rewritten Question:"""
+    
+    rewritten_query = llm.generate(prompt)
+    logging.info(f"Rewritten query: '{rewritten_query}'")
+    return rewritten_query
+
+def _construct_prompt(query: str, context: List[Dict[str, any]], language: str) -> str:
+    """Helper function to construct the final prompt for the answer generation."""
     context_parts = []
     for i, item in enumerate(context):
         text = item.get("text", "")
@@ -24,22 +46,9 @@ def _construct_prompt(query: str, context: List[Dict[str, any]], history: List[D
     context_str = "\n\n".join(context_parts)
     
     if not context:
-        return f"""You are a helpful medical assistant. The user has asked: '{query}'. No relevant context was found. Inform the user you cannot answer. Consider the conversation history for context.
-
-Conversation History:
----
-{history_str}
----
-
-Question: {query}
-Answer in {language}."""
+        return f"""You are a helpful medical assistant. The user has asked: '{query}'. No relevant context was found. Inform the user you cannot answer."""
     else:
-        return f"""You are a helpful medical assistant. Answer the user's question based ONLY on the context below. Cite your sources after the answer. Consider the conversation history for follow-up questions. Answer in {language}.
-
-Conversation History:
----
-{history_str}
----
+        return f"""You are a helpful medical assistant. Answer the user's question based ONLY on the context below. Cite your sources after the answer. Answer in {language}.
 
 Context:
 ---
@@ -49,24 +58,12 @@ Context:
 Question: {query}
 """
 
-def generate_answer(query: str, context: List[Dict[str, any]], history: List[Dict[str, str]] = [], language: str = "English") -> str:
+def generate_answer(query: str, context: List[Dict[str, any]], language: str = "English") -> str:
     """Constructs a prompt and generates a complete answer."""
-    prompt = _construct_prompt(query, context, history, language)
+    prompt = _construct_prompt(query, context, language)
     return llm.generate(prompt)
 
-def generate_answer_stream(query: str, context: List[Dict[str, any]], history: List[Dict[str, str]] = [], language: str = "English") -> Iterator[str]:
+def generate_answer_stream(query: str, context: List[Dict[str, any]], language: str = "English") -> Iterator[str]:
     """Constructs a prompt and generates a streamed answer."""
-    prompt = _construct_prompt(query, context, history, language)
+    prompt = _construct_prompt(query, context, language)
     return llm.generate_stream(prompt)
-
-if __name__ == '__main__':
-    test_query = "What are the symptoms of the flu?"
-    test_context = [{"text": "The flu is a contagious respiratory illness...", "metadata": {"source_id": "FAQ-1"}}]
-    
-    print(f"--- Generating complete answer for: '{test_query}' ---")
-    print(generate_answer(test_query, test_context))
-
-    print(f"\n--- Generating streamed answer for: '{test_query}' ---")
-    for chunk in generate_answer_stream(test_query, test_context):
-        print(chunk, end="", flush=True)
-    print()

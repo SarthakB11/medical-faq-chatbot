@@ -1,7 +1,7 @@
 import argparse
 import os
 from src.retriever import retrieve_context
-from src.answer_generator import generate_answer
+from src.answer_generator import generate_answer, rewrite_query
 from src.config import DB_PATH
 import logging
 from langdetect import detect, DetectorFactory
@@ -28,35 +28,47 @@ def main():
     """
     Main function for the command-line interface of the Medical FAQ Chatbot.
     """
-    parser = argparse.ArgumentParser(description="RAG-based Medical FAQ Chatbot CLI")
-    parser.add_argument("query", type=str, help="Your medical question.")
-    args = parser.parse_args()
-
     if not os.path.exists(DB_PATH):
         logging.error(f"Vector store not found. Please run `build_vector_store.py`.")
         return
 
-    query = args.query
+    print("--- Medical FAQ Chatbot CLI ---")
+    print("Ask a question, or type 'exit' to quit.")
     
-    try:
-        lang_code = detect(query)
-        language = get_language_name(lang_code)
-    except LangDetectException:
-        language = "English"
+    history = []
+    while True:
+        query = input("\nYou: ")
+        if query.lower() == 'exit':
+            break
 
-    logging.info(f"Received query: '{query}' (Language: {language})")
+        try:
+            lang_code = detect(query)
+            language = get_language_name(lang_code)
+        except LangDetectException:
+            language = "English"
 
-    retrieved_docs = retrieve_context(query, threshold=0.0)
+        logging.info(f"Received query: '{query}' (Language: {language})")
 
-    if not retrieved_docs:
-        print("\nI could not find any relevant information to answer your question.")
-        return
+        # 1. Rewrite the query
+        rewritten = rewrite_query(query, history)
+        logging.info(f"Rewritten query: '{rewritten}'")
 
-    answer = generate_answer(query, retrieved_docs, language=language)
+        # 2. Retrieve context with the rewritten query
+        retrieved_docs = retrieve_context(rewritten, threshold=0.0)
 
-    print("\n--- Answer ---")
-    print(answer)
-    print("---------------")
+        if not retrieved_docs:
+            print("\nBot: I could not find any relevant information to answer your question.")
+            history.append({"role": "user", "content": query})
+            history.append({"role": "assistant", "content": "I could not find any relevant information."})
+            continue
+
+        # 3. Generate the answer with the original query
+        answer = generate_answer(query, retrieved_docs, language=language)
+
+        print(f"\nBot: {answer}")
+        
+        history.append({"role": "user", "content": query})
+        history.append({"role": "assistant", "content": answer})
 
 if __name__ == "__main__":
     main()

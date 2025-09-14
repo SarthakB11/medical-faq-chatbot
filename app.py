@@ -3,7 +3,7 @@ import os
 import json
 import datetime
 from src.retriever import retrieve_context
-from src.answer_generator import generate_answer_stream
+from src.answer_generator import generate_answer_stream, rewrite_query
 from src.config import DB_PATH
 
 # --- Feedback Logging ---
@@ -54,16 +54,21 @@ if prompt := st.chat_input("What is your medical question?"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            history = [msg for msg in st.session_state.messages if msg["role"] != "user"][-4:]
-            retrieved_docs = retrieve_context(prompt, threshold=0.0)
+        with st.spinner("Rewriting query and searching..."):
+            history = st.session_state.messages[:-1][-4:]
+            
+            # 1. Rewrite the query
+            rewritten = rewrite_query(prompt, history)
+            st.info(f"Searching for: _{rewritten}_") # Show the user the rewritten query
+            
+            # 2. Retrieve context with the rewritten query
+            retrieved_docs = retrieve_context(rewritten, threshold=0.0)
             
             if not retrieved_docs:
                 response = "I could not find any relevant information to answer your question."
                 st.markdown(response)
             else:
-                # Use st.write_stream for the streaming response
-                response = st.write_stream(generate_answer_stream(prompt, retrieved_docs, history=history))
+                # 3. Generate the answer with the original query and the retrieved context
+                response = st.write_stream(generate_answer_stream(prompt, retrieved_docs))
     
     st.session_state.messages.append({"role": "assistant", "content": response})
-    # No rerun needed as st.write_stream handles the display
