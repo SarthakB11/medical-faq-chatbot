@@ -4,6 +4,8 @@ from src.retriever import retrieve_context
 from src.answer_generator import generate_answer
 import logging
 
+# The answer_generator module now handles loading the .env file.
+
 # --- Configuration ---
 DB_PATH = 'chroma_db'
 COLLECTION_NAME = 'medical_faqs'

@@ -22,11 +22,10 @@ def load_data(file_path: str) -> List[Dict[str, str]]:
     df = pd.read_csv(file_path)
     
     # Simple preprocessing: drop rows with missing values
-    df.dropna(subset=['question', 'answer'], inplace=True)
+    df.dropna(subset=['Question', 'Answer'], inplace=True)
 
     # Combine question and answer for a single text block per FAQ
-    # This is often better for retrieval as the context is combined.
-    df['text'] = df['question'] + " " + df['answer']
+    df['text'] = df['Question'] + " " + df['Answer']
 
     return df.to_dict('records')
 
