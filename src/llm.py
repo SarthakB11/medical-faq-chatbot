@@ -1,7 +1,7 @@
 # src/llm.py
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Iterator
 import google.generativeai as genai
 import logging
 from src.config import LLM_MODEL_NAME
@@ -11,7 +11,12 @@ class LanguageModel(ABC):
 
     @abstractmethod
     def generate(self, prompt: str) -> str:
-        """Generates a response based on a given prompt."""
+        """Generates a complete response based on a given prompt."""
+        pass
+
+    @abstractmethod
+    def generate_stream(self, prompt: str) -> Iterator[str]:
+        """Generates a response as a stream of chunks."""
         pass
 
 class GeminiModel(LanguageModel):
@@ -27,28 +32,30 @@ class GeminiModel(LanguageModel):
             self.model = None
 
     def generate(self, prompt: str) -> str:
-        """
-        Generates a response using the configured Gemini model.
-        """
+        """Generates a complete response."""
         if not self.model:
-            return "Error: Gemini model is not initialized. Please check your API key and model name."
-
+            return "Error: Gemini model is not initialized."
         try:
-            logging.info(f"Calling Gemini API with model: {self.model_name}...")
             response = self.model.generate_content(prompt)
-            answer = response.text.strip()
-            logging.info("Successfully received response from Gemini.")
-            return answer
+            return response.text.strip()
         except Exception as e:
-            logging.error(f"An error occurred while calling the Gemini API: {e}")
-            return "I'm sorry, but I encountered an error while trying to generate an answer."
+            logging.error(f"An error occurred during Gemini API call: {e}")
+            return "An error occurred while generating an answer."
+
+    def generate_stream(self, prompt: str) -> Iterator[str]:
+        """Generates a response as a stream of chunks."""
+        if not self.model:
+            yield "Error: Gemini model is not initialized."
+            return
+        try:
+            response_stream = self.model.generate_content(prompt, stream=True)
+            for chunk in response_stream:
+                yield chunk.text
+        except Exception as e:
+            logging.error(f"An error occurred during Gemini API stream: {e}")
+            yield "An error occurred while generating an answer."
 
 # --- Factory Function ---
 def get_language_model() -> LanguageModel:
-    """
-    Factory function to get the currently configured language model.
-    This makes it easy to switch between models in the future.
-    """
-    # For now, we only have Gemini, but you could add logic here to
-    # instantiate different models based on a config setting.
+    """Factory function to get the currently configured language model."""
     return GeminiModel()
