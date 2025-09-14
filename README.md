@@ -1,20 +1,23 @@
 # RAG-based Medical FAQ Chatbot
 
-This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answer medical questions using a knowledge base of medical FAQs. It leverages a vector database and Google's Gemini language models to provide accurate and natural-sounding answers.
+This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answer medical questions using a private knowledge base. It is built with a modular architecture, supports conversational follow-up questions, and cites its sources to ensure accuracy and trust.
 
 ## Features
 
-- **RAG Pipeline**: Retrieves relevant context from a knowledge base before generating an answer.
+- **Advanced RAG Pipeline**: Retrieves relevant context from a knowledge base before generating an answer.
+- **Source Citation**: Cites the specific source document(s) used to generate an answer, allowing for verification.
+- **Conversation Memory**: Remembers the last few turns of the conversation to understand follow-up questions.
+- **Streaming Responses**: The web interface streams answers token-by-token for a real-time chat experience.
 - **Multilingual Support**: Can understand and respond to queries in multiple languages.
-- **Simple User Interfaces**: Interact with the chatbot via a Streamlit web app or a command-line interface.
-- **Modular Design**: The codebase is organized into modules for data loading, vector store management, retrieval, and answer generation.
+- **User Feedback**: The web interface includes a thumbs-up/thumbs-down mechanism to log feedback on answer quality.
+- **Modular and Extensible**: Built with a clean, abstracted architecture that makes it easy to add new features or swap components like the language model.
 
 ## How It Works
 
-1.  **Data Preprocessing**: Medical FAQs are loaded from a CSV file, chunked into smaller pieces, and converted into vector embeddings using a multilingual Sentence Transformer model.
-2.  **Vector Store**: The embeddings are stored in a ChromaDB vector database for efficient similarity search.
-3.  **Retrieval**: When a user asks a question, the query is embedded, and the most relevant text chunks are retrieved from the vector store.
-4.  **Generation**: The user's query and the retrieved context are passed to the Gemini 2.0 Flash language model to generate a final answer.
+1.  **Data Preprocessing**: Medical FAQs are loaded from a CSV file. Each FAQ is assigned a unique `source_id`.
+2.  **Vector Store**: The FAQs are converted into vector embeddings and stored in a ChromaDB database with their `source_id` as metadata.
+3.  **Retrieval**: When a user asks a question, the query is embedded, and the most relevant text chunks (including their source metadata) are retrieved from the database.
+4.  **Generation**: The user's query, the conversation history, and the retrieved context (with source IDs) are passed to the Gemini 2.0 Flash language model. The model is instructed to answer the question and cite the sources it used.
 
 ## Prerequisites
 
@@ -37,43 +40,28 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answe
     ```
 
 3.  **Set up your Gemini API key:**
-    Create a `.env` file in the root directory by copying the example file:
-    ```bash
-    cp .env.example .env
-    ```
-    Then, open the `.env` file and add your Gemini API key:
-    ```
-    GEMINI_API_KEY="your-gemini-api-key-here"
-    ```
+    Create a `.env` file by copying the example: `cp .env.example .env`. Then, add your API key to the `.env` file.
 
-4.  **Prepare the dataset:**
-    Place your medical FAQ dataset in the `data` directory. A sample file named `medical_faqs.csv` is provided.
-
-5.  **Build the vector store:**
-    Run the following script to process the dataset and create the vector database:
+4.  **Build the vector store:**
+    Run the following script to process the dataset in the `data/` directory and create the vector database:
     ```bash
     venv/bin/python3 src/build_vector_store.py
     ```
 
 ## Usage
 
-### Streamlit Web App
+### Streamlit Web App (Recommended)
 
-To launch the web interface, run:
+The web app provides the full experience, including streaming responses and feedback buttons.
 ```bash
 venv/bin/streamlit run app.py
 ```
-Open your browser and navigate to the URL provided (usually `http://localhost:8501`).
 
 ### Command-Line Interface
 
-To use the CLI, run:
+The CLI supports interactive, multi-turn conversations with automatic language detection.
 ```bash
-venv/bin/python3 cli.py "Your medical question here"
-```
-You can also specify the language for the answer:
-```bash
-venv/bin/python3 cli.py "qué es la fiebre" --lang Spanish
+venv/bin/python3 cli.py
 ```
 
 ## Project Structure
@@ -83,17 +71,16 @@ venv/bin/python3 cli.py "qué es la fiebre" --lang Spanish
 ├── app.py                  # Streamlit web application
 ├── cli.py                  # Command-line interface
 ├── requirements.txt        # Project dependencies
-├── .env.example            # Example environment file
-├── data/                   # Directory for datasets
-│   └── medical_faqs.csv
-├── src/                    # Source code
+├── .env.example
+├── data/
+│   └── medical_faqs.csv    # Knowledge base
+├── src/
+│   ├── config.py           # Centralized configuration
 │   ├── data_loader.py
 │   ├── build_vector_store.py
 │   ├── retriever.py
+│   ├── llm.py              # Language model abstraction
 │   └── answer_generator.py
-└── tests/                  # Unit tests
-    ├── test_data_loader.py
-    ├── test_vector_store.py
-    ├── test_retriever.py
-    └── test_answer_generator.py
+└── tests/
+    └── ...                 # Unit tests for each module
 ```
