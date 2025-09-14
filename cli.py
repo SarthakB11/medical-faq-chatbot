@@ -14,16 +14,6 @@ def main():
     """
     Main function for the command-line interface of the Medical FAQ Chatbot.
     """
-    parser = argparse.ArgumentParser(description="RAG-based Medical FAQ Chatbot CLI")
-    parser.add_argument("query", type=str, help="Your medical question.")
-    parser.add_argument(
-        "--lang", 
-        type=str, 
-        default="English", 
-        help="The language for the answer (e.g., 'Spanish', 'French')."
-    )
-    args = parser.parse_args()
-
     if not VECTOR_STORE_EXISTS:
         logging.error(
             "The vector store database was not found. "
@@ -31,26 +21,36 @@ def main():
         )
         return
 
-    query = args.query
-    language = args.lang
+    print("--- Medical FAQ Chatbot CLI ---")
+    print("Ask a question, or type 'exit' to quit.")
+    
+    history = []
+    while True:
+        query = input("\nYou: ")
+        if query.lower() == 'exit':
+            break
 
-    logging.info(f"Received query: '{query}'")
+        logging.info(f"Received query: '{query}'")
 
-    # --- RAG Pipeline ---
-    logging.info("1. Retrieving context from the knowledge base...")
-    retrieved_docs = retrieve_context(query)
+        # --- RAG Pipeline ---
+        logging.info("1. Retrieving context...")
+        retrieved_docs = retrieve_context(query)
 
-    if not retrieved_docs:
-        print("\nI could not find any relevant information in the knowledge base to answer your question.")
-        return
+        if not retrieved_docs:
+            print("\nBot: I could not find any relevant information to answer your question.")
+            history.append({"role": "user", "content": query})
+            history.append({"role": "assistant", "content": "I could not find any relevant information."})
+            continue
 
-    logging.info("2. Generating an answer based on the context...")
-    answer = generate_answer(query, retrieved_docs, language=language)
+        logging.info("2. Generating answer...")
+        answer = generate_answer(query, retrieved_docs, history=history)
 
-    # --- Display Answer ---
-    print("\n--- Answer ---")
-    print(answer)
-    print("--------------- ")
+        # --- Display Answer ---
+        print(f"\nBot: {answer}")
+        
+        # Update history
+        history.append({"role": "user", "content": query})
+        history.append({"role": "assistant", "content": answer})
 
 if __name__ == "__main__":
     main()

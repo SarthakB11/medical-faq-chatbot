@@ -29,11 +29,14 @@ if prompt := st.chat_input("What is your medical question?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.spinner("Thinking..."):
+        # Get the last few messages for context, excluding the current prompt
+        history = st.session_state.messages[:-1]
+        
         retrieved_docs = retrieve_context(prompt)
         if not retrieved_docs:
             response = "I could not find any relevant information in the knowledge base to answer your question."
         else:
-            response = generate_answer(prompt, retrieved_docs, language="English")
+            response = generate_answer(prompt, retrieved_docs, history=history, language="English")
 
     with st.chat_message("assistant"):
         st.markdown(response)

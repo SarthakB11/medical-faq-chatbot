@@ -49,20 +49,26 @@ class TestAnswerGenerator(unittest.TestCase):
         self.assertIn("Source: [FAQ-3]", prompt)
 
     @patch('src.answer_generator.llm')
-    def test_generate_answer_no_context(self, mock_llm):
-        """Test the prompt format when no context is provided."""
-        mock_llm.generate.return_value = "I cannot answer that."
+    def test_generate_answer_with_history(self, mock_llm):
+        """Test that the prompt includes conversation history."""
+        mock_llm.generate.return_value = "This is a follow-up answer."
 
-        query = "What is the meaning of life?"
-        context = []
+        query = "What are the risk factors?"
+        context = [{"text": "Risk factors include age and diet.", "metadata": {"source_id": "FAQ-4"}}]
+        history = [
+            {"role": "user", "content": "Tell me about diabetes."},
+            {"role": "assistant", "content": "Diabetes is a chronic disease."}
+        ]
         
-        answer = generate_answer(query, context)
+        answer = generate_answer(query, context, history=history)
 
-        self.assertEqual(answer, "I cannot answer that.")
+        self.assertEqual(answer, "This is a follow-up answer.")
         
         prompt = mock_llm.generate.call_args[0][0]
-        self.assertIn(query, prompt)
-        self.assertIn("No relevant context was found", prompt)
+        self.assertIn("Conversation History:", prompt)
+        self.assertIn("user: Tell me about diabetes.", prompt)
+        self.assertIn("assistant: Diabetes is a chronic disease.", prompt)
+        self.assertIn("Question: What are the risk factors?", prompt)
 
 if __name__ == '__main__':
     unittest.main()
