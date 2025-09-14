@@ -72,11 +72,6 @@ def create_vector_store(
         if not texts_to_embed:
             continue
 
-        # --- DEBUGGING ---
-        if i == 0: # Check the first batch
-            logging.info(f"DEBUG: Sample metadata from first batch: {metadatas[:5]}")
-        # --- END DEBUGGING ---
-
         embeddings = model.encode(texts_to_embed, show_progress_bar=False).tolist()
         ids = [f"doc_{collection.count() + j}" for j in range(len(texts_to_embed))]
         
