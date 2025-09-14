@@ -55,7 +55,7 @@ if prompt := st.chat_input("What is your medical question?"):
 
     with st.chat_message("assistant"):
         with st.spinner("Rewriting query and searching..."):
-            history = st.session_state.messages[:-1][-4:]
+            history = st.session_state.messages[:-1][-10:]
             
             # 1. Rewrite the query
             rewritten = rewrite_query(prompt, history)

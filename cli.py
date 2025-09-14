@@ -50,7 +50,7 @@ def main():
         logging.info(f"Received query: '{query}' (Language: {language})")
 
         # 1. Rewrite the query
-        rewritten = rewrite_query(query, history)
+        rewritten = rewrite_query(query, history[-10:])
         logging.info(f"Rewritten query: '{rewritten}'")
 
         # 2. Retrieve context with the rewritten query
