@@ -2,6 +2,10 @@
 
 This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answer medical questions using a private knowledge base. It is built with a modular architecture, supports conversational follow-up questions, and cites its sources to ensure accuracy and trust.
 
+## Demo Video
+
+https://github.com/user-attachments/assets/2097c9eb-ba8d-4fa9-b9a7-d2176ad1fa5f
+
 ## Features
 
 - **Advanced RAG Pipeline**: Retrieves relevant context from a knowledge base before generating an answer.
