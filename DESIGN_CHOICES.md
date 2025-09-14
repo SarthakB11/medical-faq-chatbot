@@ -25,13 +25,13 @@ The RAG architecture was chosen because it is highly effective for building chat
     -   **Multilingual Support**: This was a key requirement. This model is capable of understanding and comparing text across many different languages, allowing the chatbot to be queried in languages other than English.
     -   **Performance vs. Size**: It offers a great balance between embedding quality and model size, making it efficient to run locally. While larger models might provide slightly better results, this model is a practical choice for a project with constraints on free tools.
 
-### c. Language Model (LLM): OpenAI's `gpt-3.5-turbo`
+### c. Language Model (LLM): Google's `gemini-1.5-flash`
 
--   **Choice**: OpenAI's GPT-3.5-turbo.
+-   **Choice**: Google's Gemini 1.5 Flash model.
 -   **Reasoning**:
-    -   **High-Quality Generation**: It is excellent at understanding context and generating fluent, natural-sounding text.
-    -   **Instruction Following**: It reliably follows the instructions in the system prompt, such as answering only from the provided context and responding in a specific language.
-    -   **Accessibility**: It is widely available and offers a free tier, aligning with the project's constraints.
+    -   **High-Quality Generation**: It is a powerful and efficient model, excellent at understanding context and generating fluent, natural-sounding text.
+    -   **Instruction Following**: It reliably follows the instructions in the prompt, such as answering only from the provided context and responding in a specific language.
+    -   **Accessibility**: It is available through the Google AI Platform and offers a free tier, aligning with the project's constraints.
 
 ### d. User Interfaces: Streamlit and CLI
 

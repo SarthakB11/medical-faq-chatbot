@@ -1,6 +1,6 @@
 # RAG-based Medical FAQ Chatbot
 
-This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answer medical questions using a knowledge base of medical FAQs. It leverages a vector database and OpenAI's language models to provide accurate and natural-sounding answers.
+This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answer medical questions using a knowledge base of medical FAQs. It leverages a vector database and Google's Gemini language models to provide accurate and natural-sounding answers.
 
 ## Features
 
@@ -14,12 +14,12 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answe
 1.  **Data Preprocessing**: Medical FAQs are loaded from a CSV file, chunked into smaller pieces, and converted into vector embeddings using a multilingual Sentence Transformer model.
 2.  **Vector Store**: The embeddings are stored in a ChromaDB vector database for efficient similarity search.
 3.  **Retrieval**: When a user asks a question, the query is embedded, and the most relevant text chunks are retrieved from the vector store.
-4.  **Generation**: The user's query and the retrieved context are passed to an OpenAI language model (GPT-3.5-turbo) to generate a final answer.
+4.  **Generation**: The user's query and the retrieved context are passed to the Gemini 1.5 Flash language model to generate a final answer.
 
 ## Prerequisites
 
 - Python 3.8+
-- An OpenAI API key
+- A Google Gemini API key
 
 ## Setup
 
@@ -36,14 +36,14 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot designed to answe
     pip install -r requirements.txt
     ```
 
-3.  **Set up your OpenAI API key:**
+3.  **Set up your Gemini API key:**
     Create a `.env` file in the root directory by copying the example file:
     ```bash
     cp .env.example .env
     ```
-    Then, open the `.env` file and add your OpenAI API key:
+    Then, open the `.env` file and add your Gemini API key:
     ```
-    OPENAI_API_KEY="your-openai-api-key-here"
+    GEMINI_API_KEY="your-gemini-api-key-here"
     ```
 
 4.  **Prepare the dataset:**
