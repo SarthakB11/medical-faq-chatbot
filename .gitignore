@@ -70,6 +70,7 @@ test_retriever_db/
 specs/
 AI_ML Engineer Assignment – RAG-based Medical FAQ Chatbot.pdf
 kaggle.json
+feedback.log
 
 # Gemini CLI files
 .gemini/
