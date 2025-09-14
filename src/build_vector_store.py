@@ -8,12 +8,14 @@ import os
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+from src.config import DB_PATH, COLLECTION_NAME, EMBEDDING_MODEL_NAME, DATA_PATH
+
 def create_vector_store(
     docs: List[Dict[str, str]], 
     collection_name: str, 
+    model_name: str,
     db_path: Optional[str] = None, 
-    client: Optional[chromadb.Client] = None,
-    model_name: str = 'paraphrase-multilingual-MiniLM-L12-v2'
+    client: Optional[chromadb.Client] = None
 ):
     """
     Creates or updates a ChromaDB vector store from a list of documents.
@@ -69,12 +71,13 @@ def create_vector_store(
 if __name__ == '__main__':
     from data_loader import load_data
     
-    DATA_PATH = 'data/medical_faqs.csv'
-    DB_PATH = 'chroma_db'
-    COLLECTION_NAME = 'medical_faqs'
-
     logging.info(f"Loading data from {DATA_PATH}...")
     documents = load_data(DATA_PATH)
     
-    # The main script will still use the persistent client
-    create_vector_store(documents, collection_name=COLLECTION_NAME, db_path=DB_PATH)
+    # The main script will use the persistent client with config values
+    create_vector_store(
+        docs=documents, 
+        collection_name=COLLECTION_NAME, 
+        model_name=EMBEDDING_MODEL_NAME,
+        db_path=DB_PATH
+    )

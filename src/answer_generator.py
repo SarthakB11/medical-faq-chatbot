@@ -20,12 +20,23 @@ if not api_key:
 else:
     genai.configure(api_key=api_key)
 
+from src.config import LLM_MODEL_NAME
+
+import logging
+from typing import List
+
+import google.generativeai as genai
+
+# Assume api_key is configured elsewhere, e.g., via environment variables
+# For example: genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+api_key = "YOUR_API_KEY" # Replace with your actual API key or load from env
+
 def generate_answer(query: str, context: List[str], language: str = "English") -> str:
     """
     Generates an answer to a query using the Gemini API, based on the provided context.
     """
-    if not api_key:
-        return "Error: Gemini API key is not configured. Please check your environment variables."
+    if not api_key or api_key == "YOUR_API_KEY":
+        return "Error: Gemini API key is not configured. Please check your environment variables or replace 'YOUR_API_KEY' with your actual key."
 
     context_str = "\n\n".join(context)
     
@@ -37,16 +48,15 @@ def generate_answer(query: str, context: List[str], language: str = "English") -
 Based on the following context, please answer the user's question.
 
 Context:
----
-{context_str}
+---\n{context_str}
 ---
 
 Question: {query}
 """
 
     try:
-        logging.info("Calling Gemini API...")
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        logging.info(f"Calling Gemini API with model: {LLM_MODEL_NAME}...")
+        model = genai.GenerativeModel(LLM_MODEL_NAME)
         response = model.generate_content(prompt)
         answer = response.text.strip()
         logging.info("Successfully received response from Gemini.")
@@ -54,6 +64,7 @@ Question: {query}
     except Exception as e:
         logging.error(f"An error occurred while calling the Gemini API: {e}")
         return "I'm sorry, but I encountered an error while trying to generate an answer. Please try again later."
+
 
 if __name__ == '__main__':
     test_query = "What are the symptoms of the flu?"

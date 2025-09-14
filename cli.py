@@ -2,14 +2,10 @@ import argparse
 import os
 from src.retriever import retrieve_context
 from src.answer_generator import generate_answer
+from src.config import DB_PATH, VECTOR_STORE_EXISTS
 import logging
 
 # The answer_generator module now handles loading the .env file.
-
-# --- Configuration ---
-DB_PATH = 'chroma_db'
-COLLECTION_NAME = 'medical_faqs'
-VECTOR_STORE_EXISTS = os.path.exists(DB_PATH)
 
 # --- Logging ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -30,8 +26,8 @@ def main():
 
     if not VECTOR_STORE_EXISTS:
         logging.error(
-            "The vector store has not been created yet. "
-            "Please run the `build_vector_store.py` script first to initialize the database."
+            "The vector store database was not found. "
+            f"Please run `build_vector_store.py` to create it at: {DB_PATH}"
         )
         return
 
@@ -42,7 +38,7 @@ def main():
 
     # --- RAG Pipeline ---
     logging.info("1. Retrieving context from the knowledge base...")
-    retrieved_docs = retrieve_context(query, collection_name=COLLECTION_NAME, db_path=DB_PATH)
+    retrieved_docs = retrieve_context(query)
 
     if not retrieved_docs:
         print("\nI could not find any relevant information in the knowledge base to answer your question.")
@@ -54,7 +50,7 @@ def main():
     # --- Display Answer ---
     print("\n--- Answer ---")
     print(answer)
-    print("---------------")
+    print("--------------- ")
 
 if __name__ == "__main__":
     main()

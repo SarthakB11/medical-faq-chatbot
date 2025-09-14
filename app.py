@@ -1,15 +1,9 @@
 import streamlit as st
 import os
 
-# --- Import project modules ---
-# The answer_generator module now handles loading the .env file.
 from src.retriever import retrieve_context
 from src.answer_generator import generate_answer
-
-# --- Configuration ---
-DB_PATH = 'chroma_db'
-COLLECTION_NAME = 'medical_faqs'
-VECTOR_STORE_EXISTS = os.path.exists(DB_PATH)
+from src.config import DB_PATH, VECTOR_STORE_EXISTS
 
 # --- Streamlit App ---
 st.set_page_config(page_title="Medical FAQ Chatbot", page_icon="⚕️")
@@ -17,7 +11,10 @@ st.title("⚕️ RAG-based Medical FAQ Chatbot")
 st.markdown("Ask a medical question and get an answer from our knowledge base.")
 
 if not VECTOR_STORE_EXISTS:
-    st.error("The vector store has not been created yet. Please run `build_vector_store.py` first.")
+    st.error(
+        "The vector store database was not found. "
+        f"Please run `build_vector_store.py` to create it at: {DB_PATH}"
+    )
     st.stop()
 
 if "messages" not in st.session_state:
@@ -32,7 +29,7 @@ if prompt := st.chat_input("What is your medical question?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.spinner("Thinking..."):
-        retrieved_docs = retrieve_context(prompt, collection_name=COLLECTION_NAME, db_path=DB_PATH)
+        retrieved_docs = retrieve_context(prompt)
         if not retrieved_docs:
             response = "I could not find any relevant information in the knowledge base to answer your question."
         else:

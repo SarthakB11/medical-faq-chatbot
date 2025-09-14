@@ -6,14 +6,22 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+from src.config import (
+    DB_PATH, 
+    COLLECTION_NAME, 
+    EMBEDDING_MODEL_NAME, 
+    CONTEXT_RETRIEVAL_N_RESULTS, 
+    CONTEXT_RETRIEVAL_THRESHOLD
+)
+
 def retrieve_context(
     query: str, 
-    collection_name: str, 
-    db_path: Optional[str] = None,
+    collection_name: str = COLLECTION_NAME, 
+    db_path: Optional[str] = DB_PATH,
     client: Optional[chromadb.Client] = None,
-    model_name: str = 'paraphrase-multilingual-MiniLM-L12-v2',
-    n_results: int = 3,
-    threshold: float = 0.0
+    model_name: str = EMBEDDING_MODEL_NAME,
+    n_results: int = CONTEXT_RETRIEVAL_N_RESULTS,
+    threshold: float = CONTEXT_RETRIEVAL_THRESHOLD
 ) -> List[str]:
     """
     Retrieves relevant context from a ChromaDB vector store.
@@ -63,11 +71,8 @@ def retrieve_context(
     return documents
 
 if __name__ == '__main__':
-    DB_PATH = 'chroma_db'
-    COLLECTION_NAME = 'medical_faqs'
-    
     test_query_english = "What are the symptoms of the flu?"
     print(f"\n--- Querying with: '{test_query_english}' ---")
-    context = retrieve_context(test_query_english, collection_name=COLLECTION_NAME, db_path=DB_PATH)
+    context = retrieve_context(test_query_english)
     for i, doc in enumerate(context):
         print(f"  Result {i+1}: {doc[:100]}...")
