@@ -13,7 +13,7 @@ from src.config import DB_PATH, COLLECTION_NAME, EMBEDDING_MODEL_NAME, DATA_PATH
 def create_vector_store(
     docs: List[Dict[str, str]], 
     collection_name: str, 
-    model_name: str,
+    model_name: str = EMBEDDING_MODEL_NAME,
     db_path: Optional[str] = None, 
     client: Optional[chromadb.Client] = None
 ):

@@ -1,43 +1,30 @@
-import google.generativeai as genai
 import os
 from typing import List
 import logging
 from dotenv import load_dotenv
+from src.llm import get_language_model
 
 # --- Load Environment Variables ---
-# Find the project root by going up one level from this script's directory (src)
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 dotenv_path = os.path.join(project_root, '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Configure the Gemini API key
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    logging.error("GEMINI_API_KEY environment variable not found. Please ensure it is set.")
-else:
-    genai.configure(api_key=api_key)
-
-from src.config import LLM_MODEL_NAME
-
-import logging
-from typing import List
-
-import google.generativeai as genai
-
-# Assume api_key is configured elsewhere, e.g., via environment variables
-# For example: genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-api_key = "YOUR_API_KEY" # Replace with your actual API key or load from env
+# --- Initialize Language Model ---
+# The factory function handles the specific implementation (e.g., Gemini)
+llm = get_language_model()
 
 def generate_answer(query: str, context: List[str], language: str = "English") -> str:
     """
-    Generates an answer to a query using the Gemini API, based on the provided context.
-    """
-    if not api_key or api_key == "YOUR_API_KEY":
-        return "Error: Gemini API key is not configured. Please check your environment variables or replace 'YOUR_API_KEY' with your actual key."
+    Constructs a prompt and generates an answer using the configured language model.
 
+    Args:
+        query: The user's query.
+        context: A list of relevant text chunks.
+        language: The language for the answer.
+
+    Returns:
+        The generated answer.
+    """
     context_str = "\n\n".join(context)
     
     if not context:
@@ -48,30 +35,18 @@ def generate_answer(query: str, context: List[str], language: str = "English") -
 Based on the following context, please answer the user's question.
 
 Context:
----\n{context_str}
+---
+{context_str}
 ---
 
 Question: {query}
 """
-
-    try:
-        logging.info(f"Calling Gemini API with model: {LLM_MODEL_NAME}...")
-        model = genai.GenerativeModel(LLM_MODEL_NAME)
-        response = model.generate_content(prompt)
-        answer = response.text.strip()
-        logging.info("Successfully received response from Gemini.")
-        return answer
-    except Exception as e:
-        logging.error(f"An error occurred while calling the Gemini API: {e}")
-        return "I'm sorry, but I encountered an error while trying to generate an answer. Please try again later."
-
+    # The actual API call is now handled by the llm object
+    return llm.generate(prompt)
 
 if __name__ == '__main__':
     test_query = "What are the symptoms of the flu?"
-    test_context = ["The flu is a contagious respiratory illness..."]
+    test_context = ["The flu is a contagious respiratory illness caused by influenza viruses..."]
     
-    if not api_key:
-        print("Cannot run example because GEMINI_API_KEY is not set.")
-    else:
-        print(f"--- Generating answer for: '{test_query}' ---")
-        print(generate_answer(test_query, test_context))
+    print(f"--- Generating answer for: '{test_query}' ---")
+    print(generate_answer(test_query, test_context))

@@ -19,7 +19,8 @@ class TestVectorStore(unittest.TestCase):
         create_vector_store(
             docs=test_docs, 
             collection_name=self.collection_name, 
-            client=self.client
+            client=self.client,
+            model_name='paraphrase-multilingual-MiniLM-L12-v2' # Use a known model for testing
         )
         
         collection = self.client.get_collection(self.collection_name)
@@ -30,7 +31,8 @@ class TestVectorStore(unittest.TestCase):
         create_vector_store(
             docs=[], 
             collection_name=self.collection_name, 
-            client=self.client
+            client=self.client,
+            model_name='paraphrase-multilingual-MiniLM-L12-v2'
         )
         
         collection = self.client.get_collection(self.collection_name)

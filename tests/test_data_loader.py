@@ -9,8 +9,8 @@ class TestDataLoader(unittest.TestCase):
         """Set up a dummy CSV file for testing."""
         self.test_csv_path = 'test_data.csv'
         data = {
-            'question': ['Q1', 'Q2'],
-            'answer': ['A1', 'A2']
+            'Question': ['Q1', 'Q2'],
+            'Answer': ['A1', 'A2']
         }
         pd.DataFrame(data).to_csv(self.test_csv_path, index=False)
 
@@ -24,10 +24,10 @@ class TestDataLoader(unittest.TestCase):
         faqs = load_data(self.test_csv_path)
         self.assertIsInstance(faqs, list)
         self.assertEqual(len(faqs), 2)
-        self.assertIn('question', faqs[0])
-        self.assertIn('answer', faqs[0])
-        self.assertEqual(faqs[0]['question'], 'Q1')
-        self.assertEqual(faqs[0]['answer'], 'A1')
+        self.assertIn('Question', faqs[0])
+        self.assertIn('Answer', faqs[0])
+        self.assertEqual(faqs[0]['Question'], 'Q1')
+        self.assertEqual(faqs[0]['Answer'], 'A1')
 
     def test_load_data_file_not_found(self):
         """Test that a FileNotFoundError is raised for a non-existent file."""
@@ -38,7 +38,7 @@ class TestDataLoader(unittest.TestCase):
         """Test that an empty list is returned for an empty CSV file."""
         empty_csv_path = 'empty_test_data.csv'
         with open(empty_csv_path, 'w') as f:
-            f.write('question,answer\n') # Just the header
+            f.write('Question,Answer\n') # Just the header
         
         faqs = load_data(empty_csv_path)
         self.assertEqual(len(faqs), 0)
