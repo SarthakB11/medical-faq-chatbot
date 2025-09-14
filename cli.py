@@ -2,7 +2,7 @@ import argparse
 import os
 from src.retriever import retrieve_context
 from src.answer_generator import generate_answer
-from src.config import DB_PATH, VECTOR_STORE_EXISTS
+from src.config import DB_PATH
 import logging
 from langdetect import detect, DetectorFactory
 from langdetect.lang_detect_exception import LangDetectException
@@ -17,55 +17,46 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def get_language_name(lang_code):
     """Converts a language code (e.g., 'en') to its full name (e.g., 'English')."""
-    # This is a simple mapping. A more robust solution might use a library.
     lang_map = {
         "en": "English", "es": "Spanish", "fr": "French", "de": "German",
         "it": "Italian", "pt": "Portuguese", "nl": "Dutch", "ru": "Russian",
         "zh-cn": "Chinese", "ja": "Japanese", "ko": "Korean", "ar": "Arabic"
     }
-    return lang_map.get(lang_code, "English") # Default to English
+    return lang_map.get(lang_code, "English")
 
 def main():
     """
     Main function for the command-line interface of the Medical FAQ Chatbot.
     """
-    if not VECTOR_STORE_EXISTS:
+    parser = argparse.ArgumentParser(description="RAG-based Medical FAQ Chatbot CLI")
+    parser.add_argument("query", type=str, help="Your medical question.")
+    args = parser.parse_args()
+
+    if not os.path.exists(DB_PATH):
         logging.error(f"Vector store not found. Please run `build_vector_store.py`.")
         return
 
-    print("--- Medical FAQ Chatbot CLI ---")
-    print("Ask a question, or type 'exit' to quit.")
+    query = args.query
     
-    history = []
-    while True:
-        query = input("\nYou: ")
-        if query.lower() == 'exit':
-            break
+    try:
+        lang_code = detect(query)
+        language = get_language_name(lang_code)
+    except LangDetectException:
+        language = "English"
 
-        try:
-            lang_code = detect(query)
-            language = get_language_name(lang_code)
-            logging.info(f"Detected language: {language} ({lang_code})")
-        except LangDetectException:
-            logging.warning("Could not detect language. Defaulting to English.")
-            language = "English"
+    logging.info(f"Received query: '{query}' (Language: {language})")
 
-        logging.info("1. Retrieving context...")
-        retrieved_docs = retrieve_context(query)
+    retrieved_docs = retrieve_context(query, threshold=0.0)
 
-        if not retrieved_docs:
-            print("\nBot: I could not find any relevant information to answer your question.")
-            history.append({"role": "user", "content": query})
-            history.append({"role": "assistant", "content": "I could not find any relevant information."})
-            continue
+    if not retrieved_docs:
+        print("\nI could not find any relevant information to answer your question.")
+        return
 
-        logging.info("2. Generating answer...")
-        answer = generate_answer(query, retrieved_docs, history=history, language=language)
+    answer = generate_answer(query, retrieved_docs, language=language)
 
-        print(f"\nBot: {answer}")
-        
-        history.append({"role": "user", "content": query})
-        history.append({"role": "assistant", "content": answer})
+    print("\n--- Answer ---")
+    print(answer)
+    print("---------------")
 
 if __name__ == "__main__":
     main()

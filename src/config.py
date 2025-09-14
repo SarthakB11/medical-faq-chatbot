@@ -22,4 +22,6 @@ LLM_MODEL_NAME = 'gemini-2.0-flash'
 
 # --- Retriever Configuration ---
 CONTEXT_RETRIEVAL_N_RESULTS = 3
-CONTEXT_RETRIEVAL_THRESHOLD = 0.5 # Using a threshold can help filter out irrelevant results
+# This threshold is based on the L2 (Euclidean) distance. A lower score is better.
+# After testing, a value around 1.5 seems to be a good balance for this model.
+CONTEXT_RETRIEVAL_THRESHOLD = 1.5

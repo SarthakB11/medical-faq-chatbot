@@ -4,7 +4,7 @@ import json
 import datetime
 from src.retriever import retrieve_context
 from src.answer_generator import generate_answer_stream
-from src.config import DB_PATH, VECTOR_STORE_EXISTS
+from src.config import DB_PATH
 
 # --- Feedback Logging ---
 FEEDBACK_LOG_FILE = "feedback.log"
@@ -25,9 +25,10 @@ st.set_page_config(page_title="Medical FAQ Chatbot", page_icon="⚕️")
 st.title("⚕️ RAG-based Medical FAQ Chatbot")
 st.markdown("Ask a medical question and get an answer from our knowledge base.")
 
-if not VECTOR_STORE_EXISTS:
+if not os.path.exists(DB_PATH):
     st.error(f"Vector store not found. Please run `build_vector_store.py`.")
     st.stop()
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -55,7 +56,7 @@ if prompt := st.chat_input("What is your medical question?"):
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             history = [msg for msg in st.session_state.messages if msg["role"] != "user"][-4:]
-            retrieved_docs = retrieve_context(prompt)
+            retrieved_docs = retrieve_context(prompt, threshold=0.0)
             
             if not retrieved_docs:
                 response = "I could not find any relevant information to answer your question."

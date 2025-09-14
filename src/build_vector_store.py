@@ -8,6 +8,12 @@ import os
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+import sys
+
+# Add the project root to the Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+
 from src.config import DB_PATH, COLLECTION_NAME, EMBEDDING_MODEL_NAME, DATA_PATH
 
 def create_vector_store(
@@ -39,11 +45,14 @@ def create_vector_store(
         logging.info("Using provided ChromaDB client.")
 
     try:
-        collection = client.get_or_create_collection(name=collection_name)
-        logging.info(f"Using collection: '{collection_name}'")
-    except Exception as e:
-        logging.error(f"Failed to get or create collection '{collection_name}': {e}")
-        return
+        client.delete_collection(name=collection_name)
+        logging.info(f"Successfully deleted existing collection: '{collection_name}'")
+    except Exception:
+        logging.info(f"Collection '{collection_name}' did not exist, creating new one.")
+        pass # Collection doesn't exist, so we don't need to delete it
+
+    collection = client.create_collection(name=collection_name)
+    logging.info(f"Successfully created new empty collection: '{collection_name}'")
 
     if not docs:
         logging.warning("Document list is empty. No new data will be added.")
@@ -62,6 +71,11 @@ def create_vector_store(
         
         if not texts_to_embed:
             continue
+
+        # --- DEBUGGING ---
+        if i == 0: # Check the first batch
+            logging.info(f"DEBUG: Sample metadata from first batch: {metadatas[:5]}")
+        # --- END DEBUGGING ---
 
         embeddings = model.encode(texts_to_embed, show_progress_bar=False).tolist()
         ids = [f"doc_{collection.count() + j}" for j in range(len(texts_to_embed))]
