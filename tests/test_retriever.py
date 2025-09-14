@@ -10,7 +10,7 @@ class TestRetriever(unittest.TestCase):
         """Test retrieving context with an English query."""
         client = chromadb.Client()
         collection_name = "test_english_query"
-        test_docs = [{"text": "The flu is a contagious respiratory illness."}]
+        test_docs = [{"text": "The flu is a contagious respiratory illness.", "source_id": "test-flu"}]
         
         create_vector_store(
             docs=test_docs, 
@@ -28,13 +28,14 @@ class TestRetriever(unittest.TestCase):
         )
         
         self.assertGreater(len(retrieved_docs), 0)
-        self.assertIn("contagious", retrieved_docs[0])
+        self.assertIn("contagious", retrieved_docs[0]['text'])
+        self.assertIn("metadata", retrieved_docs[0])
 
     def test_retrieve_context_spanish_query(self):
         """Test retrieving context with a Spanish query."""
         client = chromadb.Client()
         collection_name = "test_spanish_query"
-        test_docs = [{"text": "La fiebre es un síntoma común."}]
+        test_docs = [{"text": "La fiebre es un síntoma común.", "source_id": "test-fiebre"}]
 
         create_vector_store(
             docs=test_docs, 
@@ -52,13 +53,14 @@ class TestRetriever(unittest.TestCase):
         )
         
         self.assertGreater(len(retrieved_docs), 0)
-        self.assertIn("síntoma", retrieved_docs[0])
+        self.assertIn("síntoma", retrieved_docs[0]['text'])
+        self.assertIn("metadata", retrieved_docs[0])
 
     def test_retrieve_context_no_match(self):
         """Test that an empty list is returned when the threshold is strict."""
         client = chromadb.Client()
         collection_name = "test_no_match"
-        test_docs = [{"text": "This is a test document about medicine."}]
+        test_docs = [{"text": "This is a test document about medicine.", "source_id": "test-medicine"}]
 
         create_vector_store(
             docs=test_docs, 

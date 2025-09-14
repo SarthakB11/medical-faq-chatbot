@@ -58,13 +58,15 @@ def create_vector_store(
     for i in tqdm(range(0, len(docs), batch_size), desc="Embedding documents"):
         batch_docs = docs[i:i+batch_size]
         texts_to_embed = [doc['text'] for doc in batch_docs if doc and doc.get('text')]
+        metadatas = [{"source_id": doc['source_id']} for doc in batch_docs if doc and doc.get('text')]
+        
         if not texts_to_embed:
             continue
 
         embeddings = model.encode(texts_to_embed, show_progress_bar=False).tolist()
         ids = [f"doc_{collection.count() + j}" for j in range(len(texts_to_embed))]
         
-        collection.add(embeddings=embeddings, documents=texts_to_embed, ids=ids)
+        collection.add(embeddings=embeddings, documents=texts_to_embed, metadatas=metadatas, ids=ids)
 
     logging.info(f"Vector store update complete. Collection '{collection_name}' now contains {collection.count()} documents.")
 

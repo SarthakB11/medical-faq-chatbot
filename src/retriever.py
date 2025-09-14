@@ -1,6 +1,6 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
-from typing import List, Optional
+from typing import List, Optional, Dict
 import logging
 
 # Set up logging
@@ -22,7 +22,7 @@ def retrieve_context(
     model_name: str = EMBEDDING_MODEL_NAME,
     n_results: int = CONTEXT_RETRIEVAL_N_RESULTS,
     threshold: float = CONTEXT_RETRIEVAL_THRESHOLD
-) -> List[str]:
+) -> List[Dict[str, any]]:
     """
     Retrieves relevant context from a ChromaDB vector store.
 
@@ -36,7 +36,8 @@ def retrieve_context(
         threshold: The maximum distance score for relevance.
 
     Returns:
-        A list of relevant document texts.
+        A list of dictionaries, where each dictionary contains the document
+        text and its metadata.
     """
     if client is None:
         if db_path:
@@ -57,18 +58,32 @@ def retrieve_context(
     model = SentenceTransformer(model_name)
     query_embedding = model.encode(query).tolist()
 
-    results = collection.query(query_embeddings=[query_embedding], n_results=n_results)
+    results = collection.query(
+        query_embeddings=[query_embedding], 
+        n_results=n_results,
+        include=["documents", "metadatas", "distances"]
+    )
     
     documents = results.get('documents', [[]])[0]
+    metadatas = results.get('metadatas', [[]])[0]
     distances = results.get('distances', [[]])[0]
 
     if not documents:
         return []
 
+    # Combine the results into a list of dictionaries
+    combined_results = [
+        {"text": doc, "metadata": meta} 
+        for doc, meta in zip(documents, metadatas)
+    ]
+
     if threshold > 0.0:
-        return [doc for doc, dist in zip(documents, distances) if dist <= threshold]
+        # Filter based on distance, now that we have all the data
+        return [
+            res for res, dist in zip(combined_results, distances) if dist <= threshold
+        ]
     
-    return documents
+    return combined_results
 
 if __name__ == '__main__':
     test_query_english = "What are the symptoms of the flu?"

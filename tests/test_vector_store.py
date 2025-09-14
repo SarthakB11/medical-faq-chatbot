@@ -12,8 +12,8 @@ class TestVectorStore(unittest.TestCase):
     def test_create_vector_store_with_documents(self):
         """Test creating a vector store with documents using an in-memory client."""
         test_docs = [
-            {"text": "This is a test document about ChromaDB."},
-            {"text": "Sentence transformers are great for embeddings."},
+            {"text": "This is a test document about ChromaDB.", "source_id": "test-1"},
+            {"text": "Sentence transformers are great for embeddings.", "source_id": "test-2"},
         ]
         
         create_vector_store(

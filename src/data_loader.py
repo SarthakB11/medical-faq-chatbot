@@ -24,6 +24,9 @@ def load_data(file_path: str) -> List[Dict[str, str]]:
     # Simple preprocessing: drop rows with missing values
     df.dropna(subset=['Question', 'Answer'], inplace=True)
 
+    # Add a source identifier based on the row number
+    df['source_id'] = df.index.map(lambda x: f"FAQ-{x+1}")
+
     # Combine question and answer for a single text block per FAQ
     df['text'] = df['Question'] + " " + df['Answer']
 

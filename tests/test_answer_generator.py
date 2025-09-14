@@ -11,21 +11,25 @@ class TestAnswerGenerator(unittest.TestCase):
         mock_llm.generate.return_value = "This is a mock answer about the flu."
 
         query = "What is the flu?"
-        context = ["The flu is a contagious respiratory illness caused by influenza viruses."]
+        context = [
+            {"text": "The flu is a contagious respiratory illness.", "metadata": {"source_id": "FAQ-1"}},
+            {"text": "Symptoms include fever and cough.", "metadata": {"source_id": "FAQ-2"}}
+        ]
         
         answer = generate_answer(query, context)
 
         self.assertEqual(answer, "This is a mock answer about the flu.")
         
-        # Check that our mock LLM's generate method was called once
         mock_llm.generate.assert_called_once()
         
-        # Check that the prompt passed to the generate method was correct
         prompt = mock_llm.generate.call_args[0][0]
         self.assertIn("You are a helpful medical assistant", prompt)
         self.assertIn(query, prompt)
-        self.assertIn(context[0], prompt)
-        self.assertIn("Answer in English", prompt)
+        self.assertIn("Source: [FAQ-1]", prompt)
+        self.assertIn("Content: The flu is a contagious respiratory illness.", prompt)
+        self.assertIn("Source: [FAQ-2]", prompt)
+        self.assertIn("Content: Symptoms include fever and cough.", prompt)
+        self.assertIn("you MUST cite the sources you used", prompt)
 
     @patch('src.answer_generator.llm')
     def test_generate_answer_spanish(self, mock_llm):
@@ -33,7 +37,7 @@ class TestAnswerGenerator(unittest.TestCase):
         mock_llm.generate.return_value = "Esta es una respuesta simulada sobre la fiebre."
 
         query = "qué es la fiebre"
-        context = ["Fever is a common symptom of many illnesses."]
+        context = [{"text": "Fever is a common symptom.", "metadata": {"source_id": "FAQ-3"}}]
         
         answer = generate_answer(query, context, language="Spanish")
 
@@ -42,6 +46,7 @@ class TestAnswerGenerator(unittest.TestCase):
         
         prompt = mock_llm.generate.call_args[0][0]
         self.assertIn("Answer in Spanish", prompt)
+        self.assertIn("Source: [FAQ-3]", prompt)
 
     @patch('src.answer_generator.llm')
     def test_generate_answer_no_context(self, mock_llm):
